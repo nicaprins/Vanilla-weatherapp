@@ -1,23 +1,75 @@
-//show day and time
-
-let now = new Date();
-let days = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-let day = days[now.getDay()];
-let hour = now.getHours();
-let minute = now.getMinutes();
-if (minute < 10) {
-  minute = `0${minute}`;
+function formatDate(response) {
+  let date = new Date();
+  let days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  let day = days[date.getDay()];
+  let hours = date.getHours();
+  if (hours < 10) {
+    hours = `0${hours}`;
+  }
+  let minutes = date.getMinutes();
+  if (minutes < 10) {
+    minutes = `0${minutes}`;
+  }
+  return `Last updated: ${day} ${hours}:${minutes}`;
 }
-let h4 = document.querySelector("h4");
-h4.innerHTML = `${day} ${hour}:${minute}`;
+
+function formatDay(timestamp) {
+  let date = new Date(timestamp * 1000);
+  let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  let day = date.getDay();
+  return days[day];
+}
+
+function displayForecast(response) {
+  let forecast = response.data.daily;
+  let forecastElement = document.querySelector("#forecast");
+
+  let forecastHTML = `<div class="row">`;
+  forecast.forEach(function (forecastDay, index) {
+    if (index > 0 && index < 7) {
+      forecastHTML =
+        forecastHTML +
+        `
+          <div class="col-2">
+           <div class="card border-dark mb-2">
+            <div class="card-header weather-forecast-day">
+              ${formatDay(forecastDay.dt)}
+            </div>
+            <img src="https://openweathermap.org/img/wn/${
+              forecastDay.weather[0].icon
+            }@2x.png" alt="" width="36" class="forecast-icon" />
+              <div class="weather-forecast-temperatures">
+               <span class="weather-forecast-temperature-max"> ${Math.round(
+                 forecastDay.temp.max
+               )}°</span>
+               <span class="weather-forecast-temperature-min">  ${Math.round(
+                 forecastDay.temp.min
+               )}°</span>
+              </div>
+            </div>
+          </div>
+          `;
+    }
+  });
+
+  forecastHTML = forecastHTML + `</div>`;
+  forecastElement.innerHTML = forecastHTML;
+}
+
+function getForecast(coordinates) {
+  let apiKey = "b0c8bbe6abc74ddc23b034afa70b96c3";
+  let units = "metric";
+  let apiUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coordinates.lat}&lon=${coordinates.lon}&exclude={part}&appid=${apiKey}&units=${units}`;
+  axios.get(apiUrl).then(displayForecast);
+}
 
 function displayWeatherCondition(response) {
   let iconElement = document.querySelector("#weather-icon");
@@ -86,14 +138,6 @@ function getCurrentLocation(event) {
   navigator.geolocation.getCurrentPosition(searchLocation);
 }
 
-let searchForm = document.querySelector("#search-form");
-searchForm.addEventListener("submit", handleSubmit);
-
-let currentLocationButton = document.querySelector("#current-location");
-currentLocationButton.addEventListener("click", getCurrentLocation);
-
-searchCity("Amsterdam");
-
 function displayFarenheitTemperature(event) {
   event.preventDefault();
   let temperatureElement = document.querySelector("#temperature");
@@ -118,3 +162,11 @@ farenheitLink.addEventListener("click", displayFarenheitTemperature);
 
 let celciusLink = document.querySelector("#celcius-link");
 celciusLink.addEventListener("click", displayCelciusTemperature);
+
+let searchForm = document.querySelector("#search-form");
+searchForm.addEventListener("submit", handleSubmit);
+
+let currentLocationButton = document.querySelector("#current-location");
+currentLocationButton.addEventListener("click", getCurrentLocation);
+
+searchCity("Amsterdam");
